@@ -9,7 +9,8 @@ CLI=("git" "npm")
 
 ACTIONS_WORKFLOW=pages-deploy.yml
 
-RELEASE_HASH=$(git log --grep="chore(release):" -1 --pretty="%H")
+# Get the latest release hash, exit if not found
+RELEASE_HASH=$(git log --grep="chore(release):" -1 --pretty="%H" || true)
 
 # temporary file suffixes that make `sed -i` compatible with BSD and Linux
 TEMP_SUFFIX="to-delete"
@@ -52,6 +53,10 @@ _check_status() {
 }
 
 _check_init() {
+  if [[ -z "$RELEASE_HASH" ]]; then
+    echo "Error: No release commit found. Ensure there is a commit with the message 'chore(release):'."
+    exit 1
+  fi
   if [[ $(git rev-parse HEAD^1) == "$RELEASE_HASH" ]]; then
     echo "Already initialized."
     exit 0
